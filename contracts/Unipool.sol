@@ -66,8 +66,9 @@ contract Unipool is LPTokenWrapper, IRewardDistributionRecipient {
         _;
     }
 
-    constructor(IERC20 _gDEFI) {
+    constructor(IERC20 _gDEFI, IERC20 _uniPool) {
         gDEFI = _gDEFI;
+        uni = _uniPool;
     }
 
     function lastTimeRewardApplicable() public view returns (uint256) {
