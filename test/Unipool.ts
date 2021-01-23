@@ -1,5 +1,5 @@
 import { Signer } from "@ethersproject/abstract-signer";
-import { ethers, waffle } from "hardhat";
+import { ethers, waffle, network } from "hardhat";
 
 import UniMockArtifact from "../artifacts/contracts/mocks/UniMock.sol/UniMock.json";
 import gDEFIMockArtifact from "../artifacts/contracts/mocks/gDEFIMock.sol/gDEFIMock.json";
@@ -11,6 +11,21 @@ import { UniMock } from "../typechain/UniMock";
 import { GDefiMock } from "../typechain/GDefiMock";
 
 const { deployContract } = waffle;
+
+import { expect } from 'chai'
+
+async function latestTime() {
+  return (await ethers.provider.getBlock('latest')).timestamp
+}
+
+async function timeIncreaseTo(seconds: number) {
+  const delay = 10 - new Date().getMilliseconds();
+  await new Promise(resolve => setTimeout(resolve, delay));
+  await network.provider.request({
+    method: "evm_increaseTime",
+    params: [seconds]
+  });
+}
 
 describe("Unit tests", function () {
   before(async function () {
@@ -55,10 +70,16 @@ describe("Unit tests", function () {
       await this.uni.approve(this.pool.address, ethers.constants.MaxUint256);
       await this.uni.connect(this.accounts.user4);
       await this.uni.approve(this.pool.address, ethers.constants.MaxUint256);
+
+      this.started = (await latestTime());
+      await timeIncreaseTo(this.started + 10);
     });
 
     it('Two stakers with the same stakes wait 1 w', async function () {
-      // TODO
+      await this.pool.notifyRewardAmount(ethers.utils.parseEther('72000'))
+
+      expect(await this.pool.earned(this.accounts.user1)).to.be.equal('0');
+      expect(await this.pool.earned(this.accounts.user2)).to.be.equal('0');
     })
 
     it('Two stakers with the different (1:3) stakes wait 1 w')
